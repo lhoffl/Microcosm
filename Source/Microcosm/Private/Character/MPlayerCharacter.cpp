@@ -223,7 +223,7 @@ void AMPlayerCharacter::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 	FHitResult HitResult;
 	FVector Start = GetActorLocation();
-	FVector End = Start - FVector(0.f, 0.f, 500.f);
+	FVector End = Start - FVector(0.f, 0.f, 100.f);
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this);
 	GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params);

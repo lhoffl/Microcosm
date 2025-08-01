@@ -119,7 +119,7 @@ void AMPlayerController::Move(const FInputActionValue& InputActionValue)
 	}
 }
 
-// Can't be const, even though Rider thinks it can
+// ReSharper disable once CppMemberFunctionMayBeConst
 void AMPlayerController::Look(const FInputActionValue& InputActionValue)
 {
 	const FVector2D InputAxisVector = InputActionValue.Get<FVector2D>();
@@ -130,6 +130,7 @@ void AMPlayerController::Look(const FInputActionValue& InputActionValue)
 	}
 }
 
+// ReSharper disable once CppMemberFunctionMayBeConst
 void AMPlayerController::PlayActiveCard(const FInputActionValue& InputActionValue)
 {
 	if(AMPlayerCharacter* PlayerCharacter = Cast<AMPlayerCharacter>(GetPawn()))

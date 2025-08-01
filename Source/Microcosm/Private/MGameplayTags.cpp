@@ -29,6 +29,7 @@ void FMGameplayTags::InitializeNativeGameplayTags()
 	GameplayTags.InputTag_PrimaryFire = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("InputTag.PrimaryFire"));
 	GameplayTags.InputTag_SecondaryFire = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("InputTag.SecondaryFire"));
 	GameplayTags.InputTag_Ability1 = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("InputTag.Ability1"));
+	GameplayTags.InputTag_Jump = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("InputTag.Jump"));
 	
 	// Effects
 	GameplayTags.Effects_HitReact = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Effects.HitReact"));

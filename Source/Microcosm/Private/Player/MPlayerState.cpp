@@ -17,6 +17,12 @@ AMPlayerState::AMPlayerState()
 	AttributeSet = CreateDefaultSubobject<UMAttributeSet>("AttributeSet");
 }
 
+void AMPlayerState::BeginPlay()
+{
+	Super::BeginPlay();
+	SetGenericTeamId(0);
+}
+
 UAbilitySystemComponent* AMPlayerState::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;

@@ -50,12 +50,17 @@ public:
 	AMAbilityCardActor();
 	virtual void Tick(float DeltaTime) override;
 
+	UPROPERTY(EditDefaultsOnly)
+	bool bDestroyAfterGrounded = false;
+
 protected:
+	void OnFallTimerExpired();
 	virtual void BeginPlay() override;
 	UPROPERTY(BlueprintReadOnly)
 	FAbilityCard AbilityCard;
-private:
+	FTimerHandle FallTimerHandle;
 
+private:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Card|Ability")
 	TSubclassOf<UGameplayAbility> AbilityToGrant;
@@ -69,6 +74,15 @@ private:
 	UPROPERTY(EditDefaultsOnly)
 	UStaticMeshComponent* CardMesh;
 
+	UPROPERTY(EditDefaultsOnly)
+	float TimeBeforeFalling = 10.f;
+
+	UPROPERTY(EditDefaultsOnly)
+	float DestroyDelayAfterGrounded = 10.f;
+
+	bool bIsGrounded = false;
+	bool bFallTimerExpired = false;
+	
 	UPROPERTY(EditDefaultsOnly, Category = "Card|Rotation")
 	FRotator RotationRate = FRotator(0.f, 100.f, 0.f); 
 	

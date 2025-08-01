@@ -18,6 +18,8 @@ class MICROCOSM_API AMPlayerState : public APlayerState, public IAbilitySystemIn
 public:
 	AMPlayerState();
 
+	virtual void BeginPlay() override;
+	
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	UAttributeSet* GetAttributeSet() const;
 

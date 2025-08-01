@@ -1,6 +1,7 @@
 #pragma once
 #include "MCharacter.h"
 #include "AbilitySystem/MAbilityCardActor.h"
+#include "GameFramework/FloatingPawnMovement.h"
 #include "MEnemyCharacter.generated.h"
 
 UCLASS()
@@ -21,7 +22,7 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void DropCurrentCard() const;
-	
+
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Mesh")
 	UStaticMeshComponent* EnemyMesh;
@@ -32,6 +33,7 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Cards")
 	TArray<UMaterialInterface*> Materials;
 
+	
 	TSubclassOf<AMAbilityCardActor> CurrentCard;
 	UPROPERTY()
 	UMaterialInterface* CurrentMaterial;

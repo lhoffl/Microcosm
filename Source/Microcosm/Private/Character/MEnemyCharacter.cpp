@@ -53,6 +53,8 @@ void AMEnemyCharacter::BeginPlay()
 	Super::BeginPlay();
 	ClientSideInit();
 
+	SetGenericTeamId(1);
+	
 	if (AMGameMode* GM = Cast<AMGameMode>(UGameplayStatics::GetGameMode(this)))
 	{
 		GM->OnLoopTickIncreased.AddUObject(this, &AMEnemyCharacter::OnLoopTickIncreased);
@@ -110,9 +112,13 @@ void AMEnemyCharacter::Revive()
 
 void AMEnemyCharacter::DropCurrentCard() const
 {
-	FActorSpawnParameters SpawnParameters;
-	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-	GetWorld()->SpawnActor<AMAbilityCardActor>(CurrentCard, GetActorLocation(), FQuat::Identity.Rotator(), SpawnParameters);
+	FTransform Transform;
+	Transform.SetLocation(GetActorLocation());
+	Transform.SetRotation(FQuat::Identity);
+	
+	AMAbilityCardActor* CardActor = GetWorld()->SpawnActorDeferred<AMAbilityCardActor>(CurrentCard, Transform);
+	CardActor->bDestroyAfterGrounded = true;
+	CardActor->FinishSpawning(Transform);
 }
 
 void AMEnemyCharacter::OnLoopTickIncreased(int CurrentTick)

@@ -34,6 +34,7 @@ public:
 	FGameplayTag InputTag_PrimaryFire;	
 	FGameplayTag InputTag_SecondaryFire;	
 	FGameplayTag InputTag_Ability1;	
+	FGameplayTag InputTag_Jump;	
 
 	// Effects
 	FGameplayTag Effects_HitReact;

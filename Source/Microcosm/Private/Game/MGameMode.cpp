@@ -5,11 +5,13 @@
 
 #include "EngineUtils.h"
 #include "GenericTeamAgentInterface.h"
+#include "MGameInstance.h"
 #include "MGameplayTags.h"
 #include "AbilitySystem/MAbilitySystemLibrary.h"
 #include "Character/MEnemyCharacter.h"
 #include "Character/MPlayerCharacter.h"
 #include "GameFramework/PlayerStart.h"
+#include "Kismet/GameplayStatics.h"
 #include "Player/MPlayerState.h"
 
 void AMGameMode::PlayerEliminated(AMCharacter* EliminatedCharacter, AMPlayerController* EliminatedController, AMPlayerController* AttackerController)
@@ -68,10 +70,58 @@ AActor* AMGameMode::FindPlayerStart_Implementation(AController* Player, const FS
 	return ChoosePlayerStart_Implementation(Player);
 }
 
+void AMGameMode::AdvanceToNextLevel()
+{
+	FString LevelName = "Level" + FString::FromInt(LevelIndex);
+	UGameplayStatics::OpenLevel(this, FName(*LevelName), true);
+}
+
+void AMGameMode::GoalReached(const EGoalType GoalType)
+{
+	GetWorldTimerManager().SetTimer(DelayUntilNextLevelTimerHandle, this, &AMGameMode::AdvanceToNextLevel, DelayAfterGoalBeforeNextLevel);
+	OnGoalReached.Broadcast(GoalType);
+
+	switch (GoalType)
+	{
+	case Standard:
+		LevelIndex++;
+		break;
+	case Skip:
+		LevelIndex += 5;
+		break;
+	}
+
+	UMGameInstance* GI = Cast<UMGameInstance>(GetGameInstance());
+	if (GI)
+	{
+		GI->LevelIndex = LevelIndex;
+	}
+	
+	FString Message = FString::Printf(TEXT("Loading Level %i"), LevelIndex);
+	UMAbilitySystemLibrary::OnScreenDebugMessage(Message);
+}
+
 void AMGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 	GetWorldTimerManager().SetTimer(LoopTickTimerHandle, this, &AMGameMode::AdvanceLoop, LoopTickRate, true);
+
+	TArray<AActor*> GoalsAsActors;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AMGoalActor::StaticClass(), GoalsAsActors);
+	for(AActor* Goal : GoalsAsActors)
+	{
+		if(AMGoalActor* GoalActor = Cast<AMGoalActor>(Goal))
+		{
+			GoalActors.Add(GoalActor);
+			GoalActor->OnGoalReached.AddDynamic(this, &AMGameMode::GoalReached);
+		}
+	}
+
+	UMGameInstance* GI = Cast<UMGameInstance>(GetGameInstance());
+	if (GI)
+	{
+		LevelIndex = GI->LevelIndex;
+	}
 }
 
 void AMGameMode::AdvanceLoop()
