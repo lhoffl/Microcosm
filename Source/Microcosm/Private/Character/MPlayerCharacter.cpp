@@ -59,6 +59,9 @@ bool AMPlayerCharacter::AddCardToHand(const FAbilityCard& AbilityCard)
 		if(AbilityCard == DefaultCard) return false;
 		if(AbilityCard != DefaultCard) AbilityHand.RemoveNode(DefaultCard);
 	}
+	
+	if(AbilityCard == DefaultCard && LastUsedCard == DefaultCard) return false;
+	
 	AbilityHand.AddTail(AbilityCard);
 	OnHandUpdated.Broadcast();
 	return true;
@@ -77,7 +80,8 @@ void AMPlayerCharacter::PlayActiveCard()
 	if(!CardAbility) return;
 	
 	bPlayedActiveCardThisLoop = true;
-
+	LastUsedCard = ActiveAbilityCard;
+	
 	AbilityHand.RemoveNode(Head);
 	GetMAbilitySystemComponent()->AddAbility(CardAbility);
 	GetMAbilitySystemComponent()->TryActivateAbilityByClass(CardAbility);
@@ -192,6 +196,7 @@ void AMPlayerCharacter::BeginPlay()
 	}
 
 	DefaultCard = FAbilityCard(DefaultAbility, nullptr, DefaultAbilityColor);
+	LastUsedCard = FAbilityCard();
 	AddCardToHand(DefaultCard);
 	OnHandUpdated.Broadcast();
 	

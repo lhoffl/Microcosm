@@ -95,8 +95,7 @@ private:
 	FLinearColor DefaultAbilityColor;
 	
 	FAbilityCard DefaultCard;
-
-	
+	FAbilityCard LastUsedCard;
 	
 	int HandSize = 5;
 	int CurrentActiveCardIndex = 0;

@@ -52,9 +52,10 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-
-private:
+	UPROPERTY(BlueprintReadOnly)
 	FAbilityCard AbilityCard;
+private:
+
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Card|Ability")
 	TSubclassOf<UGameplayAbility> AbilityToGrant;
