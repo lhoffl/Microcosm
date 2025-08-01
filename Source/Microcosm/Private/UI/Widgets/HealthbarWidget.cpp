@@ -6,18 +6,7 @@
 
 void UHealthbarWidget::UpdateHealthbarWidth() const
 {
-	const float MaxTotalHealth = OwningASC->GetNumericAttribute(UMAttributeSet::GetMaxTotalHealthAttribute());
-	const float MaxHealth = OwningASC->GetNumericAttribute(UMAttributeSet::GetMaxHealthAttribute());
-	const float MaxArmor = OwningASC->GetNumericAttribute(UMAttributeSet::GetMaxArmorAttribute());
-	const float MaxOverhealth = OwningASC->GetNumericAttribute(UMAttributeSet::GetOverhealthAttribute());
-
-	const float PercentageMaxHealth = MaxHealth / MaxTotalHealth;
-	const float PercentageMaxArmor = MaxArmor / MaxTotalHealth;
-	const float PercentageMaxOverhealth = MaxOverhealth / MaxTotalHealth;
-
-	HealthBox->SetWidthOverride(HealthbarDefaultWidth * PercentageMaxHealth);
-	ArmorBox->SetWidthOverride(HealthbarDefaultWidth * PercentageMaxArmor);
-	OverhealthBox->SetWidthOverride(HealthbarDefaultWidth * PercentageMaxOverhealth);
+	HealthBox->SetWidthOverride(HealthbarDefaultWidth);
 }
 
 void UHealthbarWidget::NativeConstruct()
@@ -28,15 +17,6 @@ void UHealthbarWidget::NativeConstruct()
 	
 	HealthBox->bOverride_WidthOverride = true;
 	HealthBox->SetWidthOverride(HealthbarDefaultWidth);
-
-	ArmorBox->bOverride_WidthOverride = true;
-	ArmorBox->SetWidthOverride(HealthbarDefaultWidth);
-
-	ShieldsBox->bOverride_WidthOverride = true;
-	ShieldsBox->SetWidthOverride(HealthbarDefaultWidth);
-
-	OverhealthBox->bOverride_WidthOverride = true;
-	OverhealthBox->SetWidthOverride(HealthbarDefaultWidth);
 }
 
 void UHealthbarWidget::ConfigureWithAbilitySystem(UAbilitySystemComponent* ASC)
@@ -46,10 +26,8 @@ void UHealthbarWidget::ConfigureWithAbilitySystem(UAbilitySystemComponent* ASC)
 	if(OwningASC)
 	{
 		HealthBar->SetAndBindGameplayAttribute(OwningASC, UMAttributeSet::GetHealthAttribute(), UMAttributeSet::GetMaxHealthAttribute());
-		ArmorBar->SetAndBindGameplayAttribute(OwningASC, UMAttributeSet::GetArmorAttribute(), UMAttributeSet::GetMaxArmorAttribute());
-		OverhealthBar->SetAndBindGameplayAttribute(OwningASC, UMAttributeSet::GetOverhealthAttribute(), UMAttributeSet::GetOverhealthAttribute());
 		
-		OwningASC->GetGameplayAttributeValueChangeDelegate(UMAttributeSet::GetMaxTotalHealthAttribute()).AddUObject(this, &UHealthbarWidget::MaxTotalHealthChanged);
+		OwningASC->GetGameplayAttributeValueChangeDelegate(UMAttributeSet::GetMaxHealthAttribute()).AddUObject(this, &UHealthbarWidget::MaxTotalHealthChanged);
 
 		UpdateHealthbarWidth();
 		EnsureValidHealth();

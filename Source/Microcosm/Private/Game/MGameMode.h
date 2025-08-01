@@ -8,17 +8,19 @@
 #include "Player/MPlayerController.h"
 #include "MGameMode.generated.h"
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnLoopTickIncreased, int)
+
 UCLASS()
 class AMGameMode : public AGameMode
 {
 	GENERATED_BODY()
 public:
 
-	AMGameMode();
-
 	UPROPERTY(EditDefaultsOnly, Category = "Character Info")
 	UCharacterClassInfo* CharacterClassInfo;
-	
+
+	FOnLoopTickIncreased OnLoopTickIncreased;
+
 	virtual void PlayerEliminated(AMCharacter* EliminatedCharacter, AMPlayerController* EliminatedController, AMPlayerController* AttackerController);
 	virtual void RequestRespawn(ACharacter* EliminatedCharacter, AController* EliminatedController);
 
@@ -28,9 +30,20 @@ public:
 	float GetMaxPlayerMoveSpeed() const { return MaxPlayerMoveSpeed; }
 	
 private:
+	virtual void BeginPlay() override;
+	
 	UPROPERTY()
 	TMap<AController*, APlayerStart*> ControllersToStartSpots;
 
 	UPROPERTY(EditDefaultsOnly)
-	float MaxPlayerMoveSpeed;	
+	float MaxPlayerMoveSpeed;
+
+	UFUNCTION()
+	void AdvanceLoop();
+	
+	UPROPERTY(EditDefaultsOnly)
+	float LoopTickRate = 1.f;
+
+	int32 CurrentTick = 0;
+	FTimerHandle LoopTickTimerHandle;
 };

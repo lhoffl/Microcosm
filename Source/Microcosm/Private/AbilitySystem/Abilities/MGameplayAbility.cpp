@@ -15,12 +15,6 @@ namespace EDrawDebugTrace
 
 UMGameplayAbility::UMGameplayAbility()
 {
-	if(bRefundCooldownOnElimination)
-	{
-		FGameplayTagContainer Tags = GetAssetTags();
-		Tags.AddTag(FMGameplayTags::Get().Abilities_RefundCooldownOnElimination);
-		SetAssetTags(Tags);
-	}
 }
 
 void UMGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)

@@ -3,7 +3,6 @@
 
 #include "AbilitySystem/MAbilityCardActor.h"
 
-#include "MAbilitySystemComponent.h"
 #include "Character/MPlayerCharacter.h"
 #include "Components/SphereComponent.h"
 
@@ -11,10 +10,8 @@ void AMAbilityCardActor::OnPickupOverlap(UPrimitiveComponent* PrimitiveComponent
 {
 	if(AMPlayerCharacter* PlayerCharacter = Cast<AMPlayerCharacter>(Actor))
 	{
-		PlayerCharacter->AddCardToHand(AbilityToGrant);
+		if(PlayerCharacter->AddCardToHand(AbilityCard)) Destroy();
 	}
-
-	SetLifeSpan(0.1f);
 }
 
 AMAbilityCardActor::AMAbilityCardActor()
@@ -37,11 +34,10 @@ AMAbilityCardActor::AMAbilityCardActor()
 void AMAbilityCardActor::BeginPlay()
 {
 	Super::BeginPlay();
-		
+	AbilityCard = FAbilityCard(AbilityToGrant, CardMesh->GetMaterial(0), Color);
 }
 
 void AMAbilityCardActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 }
-

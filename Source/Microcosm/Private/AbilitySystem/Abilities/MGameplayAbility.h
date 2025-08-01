@@ -34,9 +34,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Ability|Status")
 	FGameplayTag AbilityTypeTag;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Ability|Status")
-	bool bRefundCooldownOnElimination = false;
-
 	UPROPERTY(EditDefaultsOnly, Category = "Ability")
 	bool bStartDurationOnActivate = true;
 

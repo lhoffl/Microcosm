@@ -68,6 +68,15 @@ AActor* AMGameMode::FindPlayerStart_Implementation(AController* Player, const FS
 	return ChoosePlayerStart_Implementation(Player);
 }
 
-AMGameMode::AMGameMode()
+void AMGameMode::BeginPlay()
 {
+	Super::BeginPlay();
+	GetWorldTimerManager().SetTimer(LoopTickTimerHandle, this, &AMGameMode::AdvanceLoop, LoopTickRate, true);
+}
+
+void AMGameMode::AdvanceLoop()
+{
+	CurrentTick += 1;
+	CurrentTick = FMath::Clamp(CurrentTick, 0, std::numeric_limits<int32>::max());
+	OnLoopTickIncreased.Broadcast(CurrentTick);
 }

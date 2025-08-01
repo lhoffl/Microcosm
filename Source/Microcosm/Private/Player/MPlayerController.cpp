@@ -5,6 +5,7 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "EnhancedInputSubsystems.h"
+#include "MGameplayTags.h"
 #include "AbilitySystem/MAttributeSet.h"
 #include "Character/MPlayerCharacter.h"
 #include "Components/SphereComponent.h"
@@ -91,6 +92,9 @@ void AMPlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
 // Can't be const, even though Rider thinks it can
 void AMPlayerController::Move(const FInputActionValue& InputActionValue)
 {
+	const UAbilitySystemComponent* ASC = GetASC();
+	if(ASC && ASC->HasMatchingGameplayTag(FMGameplayTags::Get().State_Movement_Disable_MovementInputs)) return;
+	
 	FVector2D InputAxisVector = InputActionValue.Get<FVector2D>();
 	InputAxisVector.Normalize();
 	if (APawn* ControlledPawn = GetPawn<APawn>())

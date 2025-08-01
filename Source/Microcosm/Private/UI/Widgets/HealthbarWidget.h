@@ -20,26 +20,8 @@ private:
 	class UValueGauge* HealthBar;
 
 	UPROPERTY(meta=(BindWidget))
-	UValueGauge* ArmorBar;
-
-	UPROPERTY(meta=(BindWidget))
-	UValueGauge* OverhealthBar;
-
-	UPROPERTY(meta=(BindWidget))
-	UValueGauge* ShieldsBar;
-
-	UPROPERTY(meta=(BindWidget))
 	class USizeBox* HealthBox;
 
-	UPROPERTY(meta=(BindWidget))
-	USizeBox* ArmorBox;
-
-	UPROPERTY(meta=(BindWidget))
-	USizeBox* ShieldsBox;
-
-	UPROPERTY(meta=(BindWidget))
-	USizeBox* OverhealthBox;
-	
 	UPROPERTY()
 	UAbilitySystemComponent* OwningASC;
 

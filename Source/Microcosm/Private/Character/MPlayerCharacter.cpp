@@ -3,9 +3,11 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "MGameplayTags.h"
+#include "AbilitySystem/MAbilityCardActor.h"
 #include "Camera/CameraComponent.h"
 #include "Game/MGameMode.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Player/MPlayerState.h"
 
 AMPlayerCharacter::AMPlayerCharacter()
@@ -49,20 +51,46 @@ UStaticMeshComponent* AMPlayerCharacter::GetBall() const
 	return BallMesh;
 }
 
-void AMPlayerCharacter::AddCardToHand(const TSubclassOf<UGameplayAbility>& CardAbility)
+bool AMPlayerCharacter::AddCardToHand(const FAbilityCard& AbilityCard)
 {
-	AbilityHand.AddHead(CardAbility);
+	if(AbilityHand.Num() >= HandSize) return false;
+	if(AbilityHand.Contains(DefaultCard))
+	{
+		if(AbilityCard == DefaultCard) return false;
+		if(AbilityCard != DefaultCard) AbilityHand.RemoveNode(DefaultCard);
+	}
+	AbilityHand.AddTail(AbilityCard);
+	OnHandUpdated.Broadcast();
+	return true;
 }
 
 void AMPlayerCharacter::PlayActiveCard()
 {
+	if(bPlayedActiveCardThisLoop) return;
 	if(AbilityHand.Num() <= 0) return;
-	const TSubclassOf<UGameplayAbility> ActiveAbility = AbilityHand.GetHead()->GetValue();
-	if(!ActiveAbility) return;
+
+	TDoubleLinkedList<FAbilityCard>::TDoubleLinkedListNode* Head = AbilityHand.GetHead();
+	if(!Head) return;
 	
-	AbilityHand.RemoveNode(ActiveAbility);
-	GetMAbilitySystemComponent()->AddAbility(ActiveAbility);
-	GetMAbilitySystemComponent()->TryActivateAbilityByClass(ActiveAbility);
+	const FAbilityCard& ActiveAbilityCard = Head->GetValue();
+	const TSubclassOf<UGameplayAbility> CardAbility = ActiveAbilityCard.AbilityToGrant;
+	if(!CardAbility) return;
+	
+	bPlayedActiveCardThisLoop = true;
+
+	AbilityHand.RemoveNode(Head);
+	GetMAbilitySystemComponent()->AddAbility(CardAbility);
+	GetMAbilitySystemComponent()->TryActivateAbilityByClass(CardAbility);
+}
+
+const TArray<FAbilityCard> AMPlayerCharacter::GetHand() const
+{
+	TArray<FAbilityCard> Result;
+	for (auto Node = AbilityHand.GetHead(); Node; Node = Node->GetNextNode())
+	{
+		Result.Add(Node->GetValue());
+	}
+	return Result;
 }
 
 void AMPlayerCharacter::InitAbilityActorInfo()
@@ -132,4 +160,117 @@ void AMPlayerCharacter::Die()
 {
 	//GetWorldTimerManager().SetTimer(RespawnTimer, this, &AMPlayerCharacter::RespawnTimerFinished, RespawnTimeDelay);
 	//Super::Die();
+}
+
+void AMPlayerCharacter::UpdateHandOrder()
+{
+	if(AbilityHand.Num() <= 1) return;
+
+	if (TDoubleLinkedList<FAbilityCard>::TDoubleLinkedListNode* Tail = AbilityHand.GetTail())
+	{
+		FAbilityCard TailValue = Tail->GetValue();
+		TailValue.bIsActiveCard = true;
+		AbilityHand.RemoveNode(Tail);
+		AbilityHand.AddHead(TailValue);
+	}
+
+	OnHandUpdated.Broadcast();
+}
+
+void AMPlayerCharacter::OnLoopTickIncreased(int CurrentTick)
+{
+	bPlayedActiveCardThisLoop = false;
+	UpdateHandOrder();
+}
+
+void AMPlayerCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+	if (AMGameMode* GM = Cast<AMGameMode>(UGameplayStatics::GetGameMode(this)))
+	{
+		GM->OnLoopTickIncreased.AddUObject(this, &AMPlayerCharacter::OnLoopTickIncreased);
+	}
+
+	DefaultCard = FAbilityCard(DefaultAbility, nullptr, DefaultAbilityColor);
+	AddCardToHand(DefaultCard);
+	OnHandUpdated.Broadcast();
+	
+	if(UAbilitySystemComponent* ASC = GetAbilitySystemComponent())
+	{
+		ASC->RegisterGameplayTagEvent(FMGameplayTags::Get().Abilities_ActiveCard_Active, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &AMPlayerCharacter::OnActiveAbilityActiveTagChanged);
+	}
+}
+
+void AMPlayerCharacter::UpdateFireballTag()
+{
+	if(bFireballVelocityAchievedThisFrame) return;
+	if(const UAbilitySystemComponent* ASC = GetAbilitySystemComponent())
+	{
+		if(ASC->HasMatchingGameplayTag(FMGameplayTags::Get().State_Movement_Fireball))
+		{
+			UAbilitySystemBlueprintLibrary::RemoveLooseGameplayTags(this, FMGameplayTags::Get().State_Movement_Fireball.GetSingleTagContainer(), true);
+		}
+	}		
+}
+
+void AMPlayerCharacter::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+	FHitResult HitResult;
+	FVector Start = GetActorLocation();
+	FVector End = Start - FVector(0.f, 0.f, 500.f);
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+	GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params);
+
+	if(HitResult.bBlockingHit)
+	{
+		if(const UAbilitySystemComponent* ASC = GetAbilitySystemComponent())
+		{
+			if(!ASC->HasMatchingGameplayTag(FMGameplayTags::Get().State_Movement_Grounded))
+			{
+				UAbilitySystemBlueprintLibrary::AddLooseGameplayTags(this, FMGameplayTags::Get().State_Movement_Grounded.GetSingleTagContainer(), true);
+			}
+		}
+	}
+	else
+	{
+		if(const UAbilitySystemComponent* ASC = GetAbilitySystemComponent())
+		{
+			if(ASC->HasMatchingGameplayTag(FMGameplayTags::Get().State_Movement_Grounded))
+			{
+				UAbilitySystemBlueprintLibrary::RemoveLooseGameplayTags(this, FMGameplayTags::Get().State_Movement_Grounded.GetSingleTagContainer(), true);
+			}
+		}	
+	}
+
+	if(BallMesh->GetComponentVelocity().Size() > FireballVelocity)
+	{
+		if(const UAbilitySystemComponent* ASC = GetAbilitySystemComponent())
+		{
+			if(!ASC->HasMatchingGameplayTag(FMGameplayTags::Get().State_Movement_Fireball))
+			{
+				UAbilitySystemBlueprintLibrary::AddLooseGameplayTags(this, FMGameplayTags::Get().State_Movement_Fireball.GetSingleTagContainer(), true);
+				bFireballVelocityAchievedThisFrame = true;
+			}
+		}
+	}
+	else
+	{
+		if(!GetWorldTimerManager().IsTimerActive(FireballGracePeriodTimer))
+		{
+			GetWorldTimerManager().SetTimer(FireballGracePeriodTimer, this, &AMPlayerCharacter::UpdateFireballTag, FireballVelocityGracePeriod);
+		}
+		bFireballVelocityAchievedThisFrame = false;
+	}
+}
+
+void AMPlayerCharacter::OnActiveAbilityActiveTagChanged(const FGameplayTag Tag, const int32 NewCount)
+{
+	if(Tag.MatchesTagExact(FMGameplayTags::Get().Abilities_ActiveCard_Active))
+	{
+		if(NewCount != 0) return;
+		if(AbilityHand.IsEmpty()) AddCardToHand(DefaultCard);
+		OnHandUpdated.Broadcast();
+	}
 }

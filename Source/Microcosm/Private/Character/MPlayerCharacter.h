@@ -1,8 +1,12 @@
 #pragma once
 #include "MCharacter.h"
+#include "AbilitySystem/MAbilityCardActor.h"
+#include "AbilitySystem/Abilities/MCardAbility.h"
 #include "MPlayerCharacter.generated.h"
 
 class USphereComponent;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHandUpdated);
 
 UCLASS()
 class AMPlayerCharacter : public AMCharacter
@@ -21,10 +25,20 @@ public:
 	UFUNCTION(BlueprintCallable)
 	FVector GetMoveForwardDirection() const;
 
+	UFUNCTION(BlueprintCallable)
 	UStaticMeshComponent* GetBall() const; 
 
-	void AddCardToHand(const TSubclassOf<UGameplayAbility>& CardAbility);
+	UFUNCTION(BlueprintCallable)
+	bool AddCardToHand(const FAbilityCard& AbilityCard);
+
+	UFUNCTION(BlueprintCallable)
 	void PlayActiveCard();
+
+	UPROPERTY(BlueprintAssignable)
+	FOnHandUpdated OnHandUpdated;
+
+	UFUNCTION(BlueprintCallable)
+	const TArray<FAbilityCard> GetHand() const;
 	
 protected:
 	virtual void InitAbilityActorInfo() override;
@@ -36,6 +50,14 @@ protected:
 
 	virtual void Die() override;
 
+	void UpdateHandOrder();
+
+	void OnLoopTickIncreased(int CurrentTick);
+	virtual void BeginPlay() override;
+
+	void UpdateFireballTag();
+	virtual void Tick(float DeltaSeconds) override;
+	
 private:
 	
 	UPROPERTY(VisibleDefaultsOnly, Category = "Character|View")
@@ -49,8 +71,35 @@ private:
 	
 	UPROPERTY(EditDefaultsOnly)
 	float RespawnTimeDelay = 5.f;
+
+	UPROPERTY(EditDefaultsOnly)
+	float FireballVelocity = 2000.f;
+	
+	UPROPERTY(EditDefaultsOnly)
+	float FireballVelocityGracePeriod = 1.f;
+
+	bool bFireballVelocityAchievedThisFrame = false;
+	
+	FTimerHandle FireballGracePeriodTimer;
 	
 	FTimerHandle RespawnTimer;
 
-	TDoubleLinkedList<TSubclassOf<UGameplayAbility>> AbilityHand;
+	bool bPlayedActiveCardThisLoop = false;
+	
+	TDoubleLinkedList<FAbilityCard> AbilityHand;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UGameplayAbility> DefaultAbility;
+
+	UPROPERTY(EditDefaultsOnly)
+	FLinearColor DefaultAbilityColor;
+	
+	FAbilityCard DefaultCard;
+
+	
+	
+	int HandSize = 5;
+	int CurrentActiveCardIndex = 0;
+
+	void OnActiveAbilityActiveTagChanged(FGameplayTag Tag, int32 NewCount);
 };

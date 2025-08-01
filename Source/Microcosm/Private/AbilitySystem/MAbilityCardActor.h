@@ -10,6 +10,37 @@
 
 class USphereComponent;
 
+USTRUCT(BlueprintType)
+struct FAbilityCard
+{
+	GENERATED_BODY()
+
+	TSubclassOf<UGameplayAbility> AbilityToGrant;
+
+	UPROPERTY(BlueprintReadOnly)
+	FLinearColor Color = FLinearColor::Black;
+	
+	UPROPERTY()
+	UMaterialInterface* Material = nullptr;
+
+	UPROPERTY(BlueprintReadOnly)
+	bool bIsActiveCard = false;
+
+	explicit FAbilityCard(const TSubclassOf<UGameplayAbility>& InAbility, UMaterialInterface* InMaterial, const FLinearColor InColor)
+	{
+		AbilityToGrant = InAbility;
+		Material = InMaterial;
+		Color = InColor;
+	}
+
+	FAbilityCard() {}
+
+	bool operator==(const FAbilityCard& Other) const
+	{
+		return AbilityToGrant == Other.AbilityToGrant;
+	}
+};
+
 UCLASS()
 class AMAbilityCardActor : public AActor
 {
@@ -23,8 +54,13 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
+	FAbilityCard AbilityCard;
+	
 	UPROPERTY(EditDefaultsOnly, Category = "Card|Ability")
 	TSubclassOf<UGameplayAbility> AbilityToGrant;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Card|Ability")
+	FLinearColor Color;
 
 	UPROPERTY(EditDefaultsOnly)
 	USphereComponent* PickupSphere;
