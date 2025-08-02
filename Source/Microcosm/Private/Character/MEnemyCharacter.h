@@ -38,6 +38,8 @@ private:
 	UPROPERTY()
 	UMaterialInterface* CurrentMaterial;
 	TDoubleLinkedList<TSubclassOf<AMAbilityCardActor>> AbilityHand;	
-	TDoubleLinkedList<UMaterialInterface*> MaterialList;	
+	TDoubleLinkedList<UMaterialInterface*> MaterialList;
+
+	UFUNCTION()
 	void OnLoopTickIncreased(int CurrentTick);
 };

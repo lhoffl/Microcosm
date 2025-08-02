@@ -8,8 +8,6 @@
 #include "MGameplayTags.h"
 #include "AbilitySystem/MAttributeSet.h"
 #include "Character/MPlayerCharacter.h"
-#include "Components/SphereComponent.h"
-#include "GameFramework/CharacterMovementComponent.h"
 #include "Input/MInputComponent.h"
 
 AMPlayerController::AMPlayerController()
@@ -102,9 +100,6 @@ void AMPlayerController::Move(const FInputActionValue& InputActionValue)
 		const AMPlayerCharacter* MPlayerCharacter = Cast<AMPlayerCharacter>(ControlledPawn);
 		if(!MPlayerCharacter) return;
 
-		//ControlledPawn->AddMovementInput(MPlayerCharacter->GetMoveForwardDirection(), InputAxisVector.Y);
-		//ControlledPawn->AddMovementInput(MPlayerCharacter->GetLookRightDirection(), InputAxisVector.X);
-
 		/*UCharacterMovementComponent* CharacterMovementComponent = MPlayerCharacter->GetCharacterMovement();
 		const float MoveSpeed = CharacterMovementComponent->MaxWalkSpeed;*/
 
@@ -114,8 +109,6 @@ void AMPlayerController::Move(const FInputActionValue& InputActionValue)
 		
 		BallMesh->AddForce(MPlayerCharacter->GetMoveForwardDirection() * InputAxisVector.Y * MoveSpeed);
 		BallMesh->AddForce(MPlayerCharacter->GetLookRightDirection() * InputAxisVector.X * MoveSpeed);
-		//CharacterMovementComponent->AddForce(MPlayerCharacter->GetMoveForwardDirection() * InputAxisVector.Y * MoveSpeed);
-		//CharacterMovementComponent->AddForce(MPlayerCharacter->GetLookRightDirection() * InputAxisVector.X * MoveSpeed);
 	}
 }
 

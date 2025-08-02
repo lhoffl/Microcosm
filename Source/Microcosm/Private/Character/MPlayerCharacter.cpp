@@ -4,6 +4,7 @@
 #include "AbilitySystemComponent.h"
 #include "MGameplayTags.h"
 #include "AbilitySystem/MAbilityCardActor.h"
+#include "AbilitySystem/MAbilitySystemLibrary.h"
 #include "Camera/CameraComponent.h"
 #include "Game/MGameMode.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -24,8 +25,6 @@ AMPlayerCharacter::AMPlayerCharacter()
 	ThirdPersonCamera->SetupAttachment(SpringArmComponent);
 
 	bUseControllerRotationYaw = false;
-	//GetCharacterMovement()->bOrientRotationToMovement = true;
-	//GetCharacterMovement()->RotationRate = FRotator(0.f, 720.f, 0.f);
 
 	SetNetUpdateFrequency(100.f);
 	SetMinNetUpdateFrequency(50.f);
@@ -81,10 +80,22 @@ void AMPlayerCharacter::PlayActiveCard()
 	
 	bPlayedActiveCardThisLoop = true;
 	LastUsedCard = ActiveAbilityCard;
-	
-	AbilityHand.RemoveNode(Head);
+
+	bool bWasSuccessful = false;
 	GetMAbilitySystemComponent()->AddAbility(CardAbility);
-	GetMAbilitySystemComponent()->TryActivateAbilityByClass(CardAbility);
+	FGameplayAbilitySpecHandle AbilityHandle = UMAbilitySystemLibrary::TryActivateAbilityFromSpec(GetMAbilitySystemComponent(), CardAbility, bWasSuccessful);
+
+	if(bWasSuccessful)
+	{
+		OnHandUpdated.Broadcast();
+		AbilityHand.RemoveNode(Head);
+	}
+	else
+	{
+		OnHandUpdated.Broadcast();
+		GetMAbilitySystemComponent()->RemoveLooseGameplayTag(FMGameplayTags::Get().Abilities_ActiveCard_Active, 1);
+		GetMAbilitySystemComponent()->ClearAbility(AbilityHandle);
+	}
 }
 
 const TArray<FAbilityCard> AMPlayerCharacter::GetHand() const
@@ -102,8 +113,6 @@ void AMPlayerCharacter::InitAbilityActorInfo()
 	AMPlayerState* MPlayerState = GetPlayerState<AMPlayerState>();
 	check(MPlayerState);
 
-	bIsDead = false;
-	
 	MPlayerState->GetAbilitySystemComponent()->InitAbilityActorInfo(MPlayerState, this);
 	AbilitySystemComponent = MPlayerState->GetAbilitySystemComponent();
 	AttributeSet = MPlayerState->GetAttributeSet();
@@ -115,23 +124,9 @@ void AMPlayerCharacter::InitAbilityActorInfo()
 		UAbilitySystemBlueprintLibrary::RemoveLooseGameplayTags(this, FMGameplayTags::Get().State_Dead.GetSingleTagContainer(), true);
 	}
 
-	//ConfigureOverheadStatusWidget();
-	
-	//GetCharacterMovement()->Activate();
-
 	AbilitySystemComponent->SetUserAbilityActivationInhibited(false);
 	
-	//FGameplayAbilitySpecHandle CurrentWeaponAbilityHandle = GetMAbilitySystemComponent()->AddAbility(WeaponAbility);
-	
 	Super::InitAbilityActorInfo();
-}
-
-void AMPlayerCharacter::RespawnTimerFinished()
-{
-	if(AMGameMode* MGameMode = GetWorld()->GetAuthGameMode<AMGameMode>())
-	{
-		//MGameMode->RequestRespawn(this, Controller);
-	}
 }
 
 void AMPlayerCharacter::PossessedBy(AController* NewController)
@@ -155,15 +150,21 @@ void AMPlayerCharacter::OnRep_PlayerState()
 	}
 }
 
+void AMPlayerCharacter::FellOutOfWorld(const UDamageType& dmgType)
+{
+	Super::FellOutOfWorld(dmgType);
+	if(AGameModeBase* GameMode = UGameplayStatics::GetGameMode(this))
+	{
+		if(const AMGameMode* MGameMode = Cast<AMGameMode>(GameMode))
+		{
+			MGameMode->RestartLevel();	
+		}
+	}
+}
+
 void AMPlayerCharacter::ServerSideInit()
 {
 	Super::ServerSideInit();
-}
-
-void AMPlayerCharacter::Die()
-{
-	//GetWorldTimerManager().SetTimer(RespawnTimer, this, &AMPlayerCharacter::RespawnTimerFinished, RespawnTimeDelay);
-	//Super::Die();
 }
 
 void AMPlayerCharacter::UpdateHandOrder()
@@ -192,7 +193,7 @@ void AMPlayerCharacter::BeginPlay()
 	Super::BeginPlay();
 	if (AMGameMode* GM = Cast<AMGameMode>(UGameplayStatics::GetGameMode(this)))
 	{
-		GM->OnLoopTickIncreased.AddUObject(this, &AMPlayerCharacter::OnLoopTickIncreased);
+		GM->OnLoopTickIncreased.AddDynamic(this, &AMPlayerCharacter::OnLoopTickIncreased);
 	}
 
 	DefaultCard = FAbilityCard(DefaultAbility, nullptr, DefaultAbilityColor);

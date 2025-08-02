@@ -67,13 +67,7 @@ public:
 	static TArray<FVector> EvenlyRotatedVectorsArc(const FVector& Forward, const float AngleDegrees, const int32 NumVectors);
 
 	UFUNCTION(BlueprintCallable, Category = "MAbilitySystemLibrary|GameplayMechanics")
-	static FGameplayAbilitySpecHandle TryActivateAbilityFromSpec(UAbilitySystemComponent* ASC, TSubclassOf<UGameplayAbility> Ability, bool bRequireAuthority = true);
-
-	UFUNCTION(BlueprintCallable, Category = "MAbilitySystemLibrary|Teams")
-	static TArray<AMPlayerState*> GetAllPlayersOnTeam(FGenericTeamId InTeam, const UObject* WorldContextObject);
-
-	UFUNCTION(BlueprintCallable, Category = "MAbilitySystemLibrary|Teams")
-	static TArray<AActor*> GetAllPlayersOnTeamAsActors(AActor* Actor);
+	static FGameplayAbilitySpecHandle TryActivateAbilityFromSpec(UAbilitySystemComponent* ASC, TSubclassOf<UGameplayAbility> Ability, bool& bWasSuccessful, bool bRequireAuthority = true);
 
 	UFUNCTION(BlueprintCallable, Category = "MAbilitySystemLibrary|Teams")
 	static FGenericTeamId GetTeam(AActor* InActor);

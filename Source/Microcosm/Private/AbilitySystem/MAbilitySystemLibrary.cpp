@@ -182,7 +182,7 @@ TArray<FVector> UMAbilitySystemLibrary::EvenlyRotatedVectorsArc(const FVector& F
 	return Result;
 }
 
-FGameplayAbilitySpecHandle UMAbilitySystemLibrary::TryActivateAbilityFromSpec(UAbilitySystemComponent* ASC, const TSubclassOf<UGameplayAbility> Ability, bool bRequireAuthority)
+FGameplayAbilitySpecHandle UMAbilitySystemLibrary::TryActivateAbilityFromSpec(UAbilitySystemComponent* ASC, const TSubclassOf<UGameplayAbility> Ability, bool& bWasSuccessful, bool bRequireAuthority)
 {
 	if (!ASC) return FGameplayAbilitySpecHandle();
 	//if(!ASC->GetAvatarActor()->HasAuthority() && bRequireAuthority) return FGameplayAbilitySpecHandle(); 
@@ -191,47 +191,13 @@ FGameplayAbilitySpecHandle UMAbilitySystemLibrary::TryActivateAbilityFromSpec(UA
 	{
 		if (Spec.Ability->GetClass() == Ability)
 		{
-			ASC->TryActivateAbility(Spec.Handle, true);
+			bWasSuccessful = ASC->TryActivateAbility(Spec.Handle, true);
 			return Spec.Handle;
 		}
 	}
-	
+
+	bWasSuccessful = false;
 	return FGameplayAbilitySpecHandle();	
-}
-
-TArray<AMPlayerState*> UMAbilitySystemLibrary::GetAllPlayersOnTeam(FGenericTeamId InTeam, const UObject* WorldContextObject)
-{
-	if(AGameStateBase* GameState = UGameplayStatics::GetGameState(WorldContextObject))
-	{
-		if(AMGameState* MGameState = Cast<AMGameState>(GameState))
-		{
-			switch (InTeam)
-			{
-			case 0:
-				return MGameState->Team0;
-			case 1:
-				return MGameState->Team1;
-			default:
-				return TArray<AMPlayerState*>();
-			}
-		}
-	}
-	return TArray<AMPlayerState*>(); 
-}
-
-TArray<AActor*> UMAbilitySystemLibrary::GetAllPlayersOnTeamAsActors(AActor* Actor)
-{
-	TArray<AActor*> TeamActors;
-	TArray<AMPlayerState*> TeamPlayerStates = GetAllPlayersOnTeam(GetTeam(Actor), Actor);
-	for(const AMPlayerState* PlayerState : TeamPlayerStates)
-	{
-		if(APawn* Pawn = PlayerState->GetPawn())
-		{
-			TeamActors.AddUnique(Pawn);
-		}
-	}
-
-	return TeamActors;
 }
 
 FGenericTeamId UMAbilitySystemLibrary::GetTeam(AActor* InActor)

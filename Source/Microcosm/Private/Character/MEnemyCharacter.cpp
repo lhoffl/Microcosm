@@ -57,7 +57,7 @@ void AMEnemyCharacter::BeginPlay()
 	
 	if (AMGameMode* GM = Cast<AMGameMode>(UGameplayStatics::GetGameMode(this)))
 	{
-		GM->OnLoopTickIncreased.AddUObject(this, &AMEnemyCharacter::OnLoopTickIncreased);
+		GM->OnLoopTickIncreased.AddDynamic(this, &AMEnemyCharacter::OnLoopTickIncreased);
 	}
 
 	for(TSubclassOf<AMAbilityCardActor> Card : AbilityCards)

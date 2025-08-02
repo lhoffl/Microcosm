@@ -21,12 +21,15 @@ AMGoalActor::AMGoalActor()
 	PointLightComponent->SetupAttachment(GetRootComponent());	
 
 	SpotLightComponent = CreateDefaultSubobject<USpotLightComponent>("SpotLight");
-	SpotLightComponent->SetupAttachment(GetRootComponent());	
+	SpotLightComponent->SetupAttachment(GetRootComponent());
+
+	RotatingMovementComponent = CreateDefaultSubobject<URotatingMovementComponent>("RotatingComp");
 }
 
 void AMGoalActor::BeginPlay()
 {
 	Super::BeginPlay();
+	RotatingMovementComponent->RotationRate = RotationRate;
 }
 
 // ReSharper disable once CppMemberFunctionMayBeConst

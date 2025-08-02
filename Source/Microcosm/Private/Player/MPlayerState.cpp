@@ -41,11 +41,6 @@ FGenericTeamId AMPlayerState::GetGenericTeamId() const
 void AMPlayerState::SetGenericTeamId(const FGenericTeamId& InTeamID)
 {
 	TeamID = InTeamID;
-
-	/*if(AMPlayerCharacter* MCharacter = Cast<AMPlayerCharacter>(GetPawn()))
-	{
-		MCharacter->SetGenericTeamId(TeamID);
-	}*/
 }
 
 ETeamAttitude::Type AMPlayerState::GetTeamAttitudeTowards(const AActor& Other) const

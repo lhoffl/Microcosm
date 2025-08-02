@@ -1,7 +1,6 @@
 #pragma once
 #include "MCharacter.h"
 #include "AbilitySystem/MAbilityCardActor.h"
-#include "AbilitySystem/Abilities/MCardAbility.h"
 #include "MPlayerCharacter.generated.h"
 
 class USphereComponent;
@@ -42,16 +41,16 @@ public:
 	
 protected:
 	virtual void InitAbilityActorInfo() override;
-	void RespawnTimerFinished();
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void OnRep_PlayerState() override;
 
+	virtual void FellOutOfWorld(const UDamageType& dmgType) override;
+	
 	virtual void ServerSideInit() override;
-
-	virtual void Die() override;
 
 	void UpdateHandOrder();
 
+	UFUNCTION()
 	void OnLoopTickIncreased(int CurrentTick);
 	virtual void BeginPlay() override;
 

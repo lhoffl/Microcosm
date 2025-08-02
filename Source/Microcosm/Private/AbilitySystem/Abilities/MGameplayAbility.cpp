@@ -165,7 +165,6 @@ TArray<FHitResult> UMGameplayAbility::GetHitResultFromSweepLocationTargetData(co
 
 		TArray<AActor*> ActorsToIgnore;
 		if(bIgnoreSelf) ActorsToIgnore.Add(GetAvatarActorFromActorInfo());
-		if(bIgnoreTeam) ActorsToIgnore.Append(UMAbilitySystemLibrary::GetAllPlayersOnTeamAsActors(GetAvatarActorFromActorInfo()));
 
 		const EDrawDebugTrace::Type DrawDebug = bDrawDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None;
 

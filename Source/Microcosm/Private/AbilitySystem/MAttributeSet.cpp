@@ -123,14 +123,7 @@ void UMAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackD
 
 			if(bFatal)
 			{
-				if(AMGameMode* MGameMode = GetWorld()->GetAuthGameMode<AMGameMode>())
-				{
-					AMPlayerController* SourcePlayerController = Cast<AMPlayerController>(Props.SourceController);
-					AMPlayerController* TargetPlayerController = Cast<AMPlayerController>(Props.TargetController);
-					AMCharacter* TargetCharacter = Cast<AMCharacter>(Props.TargetCharacter);
 
-					MGameMode->PlayerEliminated(TargetCharacter, TargetPlayerController, SourcePlayerController);	
-				}
 			}
 			else
 			{
