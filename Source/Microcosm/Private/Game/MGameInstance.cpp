@@ -9,6 +9,13 @@
 UMGameInstance::UMGameInstance()
 {
 	MusicComponent = CreateDefaultSubobject<UAudioComponent>("Music");
+	SFXComponent = CreateDefaultSubobject<UAudioComponent>("SFX");
+}
+
+void UMGameInstance::PlaySFX(USoundBase* SFX)
+{
+	SFXComponent = UGameplayStatics::CreateSound2D(this, SFX, 1, 1, 1, nullptr, true);
+	SFXComponent->Play();
 }
 
 void UMGameInstance::PlayMusic()
@@ -25,4 +32,21 @@ void UMGameInstance::PlayMusic()
 			MusicComponent->Play();
 		}
 	}
+}
+
+void UMGameInstance::Init()
+{
+	Super::Init();
+	StartTime = FPlatformTime::Seconds();
+}
+
+void UMGameInstance::Shutdown()
+{
+	Super::Shutdown();
+	// Optional: Log or save playtime here
+}
+
+float UMGameInstance::GetElapsedPlayTime() const
+{
+	return static_cast<float>(FPlatformTime::Seconds() - StartTime);
 }

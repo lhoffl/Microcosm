@@ -118,8 +118,8 @@ void AMPlayerController::Look(const FInputActionValue& InputActionValue)
 	const FVector2D InputAxisVector = InputActionValue.Get<FVector2D>();
 	if (APawn* ControlledPawn = GetPawn<APawn>())
 	{
-		ControlledPawn->AddControllerYawInput(InputAxisVector.X);
-		ControlledPawn->AddControllerPitchInput(-InputAxisVector.Y);
+		ControlledPawn->AddControllerYawInput(InputAxisVector.X * 0.5f);
+		ControlledPawn->AddControllerPitchInput(-InputAxisVector.Y * 0.5f);
 	}
 }
 

@@ -3,23 +3,59 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "MGameplayTags.h"
+#include "MPlayerCharacter.h"
 #include "AbilitySystem/MAbilitySystemComponent.h"
 #include "AbilitySystem/MAbilitySystemLibrary.h"
 #include "AbilitySystem/MAttributeSet.h"
+#include "Blueprint/AIBlueprintHelperLibrary.h"
 #include "Game/MGameMode.h"
 #include "Kismet/GameplayStatics.h"
+
+void AMEnemyCharacter::OnHitBoxOverlapped(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if(const UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor))
+	{
+		if(ASC->HasMatchingGameplayTag(FMGameplayTags::Get().State_Movement_Fireball))
+		{
+			DropCard();
+
+			EnemyMesh->SetAnimationMode(EAnimationMode::AnimationSingleNode);
+			EnemyMesh->SetAnimation(DeathAnimation);
+			EnemyMesh->Play(false);
+
+			OnDeathStarted.Broadcast(this);
+			SetLifeSpan(10.f);
+			EnemyMesh->SetEnableGravity(true);
+		}
+	}
+}
 
 AMEnemyCharacter::AMEnemyCharacter()
 {
 	AbilitySystemComponent = CreateDefaultSubobject<UMAbilitySystemComponent>("AbilitySystemComponent");
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
-
+	
 	AttributeSet = CreateDefaultSubobject<UMAttributeSet>("AttributeSet");
 
-	EnemyMesh = CreateDefaultSubobject<UStaticMeshComponent>("Mesh");
-	EnemyMesh->SetSimulatePhysics(true);
-	SetRootComponent(EnemyMesh);	
+	PhysicsMesh = CreateDefaultSubobject<USkeletalMeshComponent>("Physics");
+	//PhysicsMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	//PhysicsMesh->SetCollisionObjectType(ECC_PhysicsBody);
+	//PhysicsMesh->SetSimulatePhysics(true);
+	PhysicsMesh->SetVisibility(false);
+	SetRootComponent(PhysicsMesh);
+	
+	EnemyMesh = CreateDefaultSubobject<USkeletalMeshComponent>("Mesh");
+	EnemyMesh->SetEnableGravity(false);
+	EnemyMesh->SetSimulatePhysics(false);
+	EnemyMesh->SetupAttachment(GetRootComponent());
+	
+	HitBox =CreateDefaultSubobject<USphereComponent>("Hitbox");
+	HitBox->SetupAttachment(GetRootComponent());
+	HitBox->OnComponentBeginOverlap.AddDynamic(this, &AMEnemyCharacter::OnHitBoxOverlapped);
+	HitBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	HitBox->SetEnableGravity(false);
+	HitBox->SetSimulatePhysics(false);
 	
 	bShowName = false;
 	bAlwaysShowHealth = false;
@@ -53,75 +89,32 @@ void AMEnemyCharacter::BeginPlay()
 	Super::BeginPlay();
 	ClientSideInit();
 
+	ToggleActive(true);
+	EnemyMesh->SetAnimationMode(EAnimationMode::AnimationSingleNode);
+	EnemyMesh->SetAnimation(IdleAnimation);
+	EnemyMesh->Play(true);
 	SetGenericTeamId(1);
-	
-	if (AMGameMode* GM = Cast<AMGameMode>(UGameplayStatics::GetGameMode(this)))
-	{
-		GM->OnLoopTickIncreased.AddDynamic(this, &AMEnemyCharacter::OnLoopTickIncreased);
-	}
-
-	for(TSubclassOf<AMAbilityCardActor> Card : AbilityCards)
-	{
-		AbilityHand.AddHead(Card);
-	}
-
-	for(UMaterialInterface* Material : Materials)
-	{
-		MaterialList.AddHead(Material);
-	}
-	
-	if(AbilityHand.Num() > 0)
-	{
-		CurrentCard = AbilityHand.GetHead()->GetValue();
-		CurrentMaterial = MaterialList.GetHead()->GetValue();
-	}
 }
 
-void AMEnemyCharacter::UpdateHandOrder()
+void AMEnemyCharacter::DropCard()
 {
-	if(AbilityHand.Num() <= 1) return;
-
-	if (TDoubleLinkedList<TSubclassOf<AMAbilityCardActor>>::TDoubleLinkedListNode* Tail = AbilityHand.GetTail())
-	{
-		const TSubclassOf<AMAbilityCardActor> TailValue = Tail->GetValue();
-		AbilityHand.RemoveNode(Tail);
-		AbilityHand.AddHead(TailValue);
-		CurrentCard = TailValue;
-	}
-
-	if (TDoubleLinkedList<UMaterialInterface*>::TDoubleLinkedListNode* Tail = MaterialList.GetTail())
-	{
-		UMaterialInterface* TailValue = Tail->GetValue();
-		MaterialList.RemoveNode(Tail);
-		MaterialList.AddHead(TailValue);
-		CurrentMaterial = TailValue;
-		EnemyMesh->SetMaterial(0, CurrentMaterial);
-		EnemyMesh->SetMaterial(1, CurrentMaterial);
-	}
-}
-
-bool AMEnemyCharacter::IsDead() const
-{
-	return AbilitySystemComponent->HasMatchingGameplayTag(FMGameplayTags::Get().State_Dead);
-}
-
-void AMEnemyCharacter::Revive()
-{
-	UAbilitySystemBlueprintLibrary::RemoveLooseGameplayTags(this, FMGameplayTags::Get().State_Dead.GetSingleTagContainer(), true);	
-}
-
-void AMEnemyCharacter::DropCurrentCard() const
-{
+	if(!bIsActive) return;
+	if(bCardDropped) return;
 	FTransform Transform;
 	Transform.SetLocation(GetActorLocation());
 	Transform.SetRotation(FQuat::Identity);
 	
-	AMAbilityCardActor* CardActor = GetWorld()->SpawnActorDeferred<AMAbilityCardActor>(CurrentCard, Transform);
+	AMAbilityCardActor* CardActor = GetWorld()->SpawnActorDeferred<AMAbilityCardActor>(AbilityCard, Transform);
 	CardActor->bDestroyAfterGrounded = true;
 	CardActor->FinishSpawning(Transform);
+	bCardDropped = true;
 }
 
-void AMEnemyCharacter::OnLoopTickIncreased(int CurrentTick)
+void AMEnemyCharacter::ToggleActive(const bool bActive)
 {
-	UpdateHandOrder();
+	bIsActive = bActive;
+	SetActorHiddenInGame(!bActive);
+	SetActorEnableCollision(bActive);
 }
+
+

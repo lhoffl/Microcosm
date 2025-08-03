@@ -14,12 +14,13 @@ class UCardWidget : public UUserWidget
 {
 	GENERATED_BODY()
 
+protected:
 	virtual void NativeConstruct() override;
 	
 	UPROPERTY(meta=(BindWidget))
 	USizeBox* SizeBox;
 
-	UPROPERTY(meta=(BindWidget))
+	UPROPERTY(BlueprintReadWrite, meta=(BindWidget))
 	UImage* Image;
 
 	UPROPERTY(EditDefaultsOnly)

@@ -15,7 +15,8 @@ UENUM(BlueprintType)
 enum class EGoalType : uint8
 {
 	Standard,
-	Skip
+	Skip,
+	LastGoalForWorld
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGoalReached, EGoalType, GoalType);

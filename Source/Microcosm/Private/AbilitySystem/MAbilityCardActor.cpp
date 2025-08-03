@@ -4,6 +4,7 @@
 #include "AbilitySystem/MAbilityCardActor.h"
 
 #include "Character/MPlayerCharacter.h"
+#include "Components/BillboardComponent.h"
 #include "Components/SphereComponent.h"
 
 void AMAbilityCardActor::OnPickupOverlap(UPrimitiveComponent* PrimitiveComponent, AActor* Actor, UPrimitiveComponent* PrimitiveComponent1, signed int I, bool bArg, const FHitResult& HitResult)
@@ -20,8 +21,14 @@ AMAbilityCardActor::AMAbilityCardActor()
 	CardMesh = CreateDefaultSubobject<UStaticMeshComponent>("CardMesh");
 	CardMesh->SetSimulatePhysics(false);
 	CardMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	CardMesh->SetVisibility(false);
 	SetRootComponent(CardMesh);
 
+	CardBillboard = CreateDefaultSubobject<UBillboardComponent>("Billboard");
+	CardBillboard->SetupAttachment(GetRootComponent());
+	CardBillboard->SetHiddenInGame(false);
+	CardBillboard->Sprite = Texture2D;
+	
 	RotatingMovementComponent = CreateDefaultSubobject<URotatingMovementComponent>("RotatingMovement");
 	RotatingMovementComponent->RotationRate = RotationRate;
 	
@@ -34,8 +41,9 @@ AMAbilityCardActor::AMAbilityCardActor()
 void AMAbilityCardActor::BeginPlay()
 {
 	Super::BeginPlay();
-	AbilityCard = FAbilityCard(AbilityToGrant, CardMesh->GetMaterial(0), Color);
-
+	AbilityCard = FAbilityCard(AbilityToGrant, Texture2D, Color);
+	CardBillboard->Sprite = Texture2D;
+	
 	if(bDestroyAfterGrounded) GetWorldTimerManager().SetTimer(FallTimerHandle, this, &AMAbilityCardActor::OnFallTimerExpired, TimeBeforeFalling);
 }
 

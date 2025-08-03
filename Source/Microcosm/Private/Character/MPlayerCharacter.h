@@ -38,6 +38,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	const TArray<FAbilityCard> GetHand() const;
+
+	UFUNCTION()
+	void PlayWinMontage() const;
 	
 protected:
 	virtual void InitAbilityActorInfo() override;
@@ -67,6 +70,9 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Ball")
 	UStaticMeshComponent* BallMesh;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Ball")
+	USkeletalMeshComponent* PlayerMesh;
 	
 	UPROPERTY(EditDefaultsOnly)
 	float RespawnTimeDelay = 5.f;
@@ -86,15 +92,26 @@ private:
 	bool bPlayedActiveCardThisLoop = false;
 	
 	TDoubleLinkedList<FAbilityCard> AbilityHand;
-
-	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UGameplayAbility> DefaultAbility;
-
-	UPROPERTY(EditDefaultsOnly)
-	FLinearColor DefaultAbilityColor;
 	
-	FAbilityCard DefaultCard;
 	FAbilityCard LastUsedCard;
+
+	UPROPERTY(EditDefaultsOnly)
+	USoundBase* MushroomDeath;
+
+	UPROPERTY(EditDefaultsOnly)
+	USoundBase* CardAdded;
+
+	UPROPERTY(EditDefaultsOnly)
+	UAnimationAsset* MushroomDeathAnimation;	
+
+	UPROPERTY(EditDefaultsOnly)
+	UAnimationAsset* MushroomWinAnimation;	
+	
+	UPROPERTY(EditDefaultsOnly)
+	UAnimationAsset* MushroomFireballAnimation;
+	
+	UPROPERTY(EditDefaultsOnly)
+	UAnimationAsset* MushroomIdleAnimation;
 	
 	int HandSize = 5;
 	int CurrentActiveCardIndex = 0;

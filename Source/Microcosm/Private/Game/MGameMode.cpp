@@ -4,31 +4,46 @@
 #include "Game/MGameMode.h"
 
 #include "MGameInstance.h"
+#include "AbilitySystem/MAbilitySystemLibrary.h"
+#include "Character/MPlayerCharacter.h"
 #include "Kismet/GameplayStatics.h"
 
 void AMGameMode::AdvanceToNextLevel() const
 {
-	const FString LevelName = "Level" + FString::FromInt(LevelIndex);
+	const FString LevelName = FString::Printf(TEXT("/Game/_Blueprints/Maps/Level%d"), LevelIndex);
+	UE_LOG(LogTemp, Warning, TEXT("Trying to open level: %s"), *LevelName);
 	UGameplayStatics::OpenLevel(this, FName(*LevelName), true);
 }
 
 void AMGameMode::GoalReached(const EGoalType GoalType)
 {
-	GetWorldTimerManager().SetTimer(DelayUntilNextLevelTimerHandle, this, &AMGameMode::AdvanceToNextLevel, DelayAfterGoalBeforeNextLevel);
+	if (UMGameInstance* GI = Cast<UMGameInstance>(GetGameInstance())) {
+		const FString LevelName = UGameplayStatics::GetCurrentLevelName(GetWorld(), true);
+		float EndTime = GI->GetElapsedPlayTime() - StartTime;
+		GI->LevelNamesToTime.Add(FName(LevelName), EndTime);
+	}
+	
 	OnGoalReached.Broadcast(GoalType);
 
-	switch (GoalType)
-	{
-	case EGoalType::Standard:
-		LevelIndex++;
-		break;
-	case EGoalType::Skip:
-		LevelIndex += 5;
-		break;
-	}
+	GetWorldTimerManager().SetTimer(DelayUntilNextLevelTimerHandle, this, &AMGameMode::AdvanceToNextLevel, DelayAfterGoalBeforeNextLevel);
 
 	if (UMGameInstance* GI = Cast<UMGameInstance>(GetGameInstance()))
 	{
+		switch (GoalType)
+		{
+		case EGoalType::Standard:
+			LevelIndex++;
+			//GI->PlaySFX(LevelComplete);
+			break;
+		case EGoalType::Skip:
+			LevelIndex += 5;
+			GI->PlaySFX(LevelSkipComplete);
+			break;
+		case EGoalType::LastGoalForWorld:
+			DelayUntilNextLevelTimerHandle.Invalidate();
+		}
+		
+		GI->PlaySFX(LevelCompleteJingle);
 		GI->LevelIndex = LevelIndex;
 	}
 }
@@ -59,6 +74,7 @@ void AMGameMode::BeginPlay()
 	{
 		LevelIndex = GI->LevelIndex;
 		GI->PlayMusic();
+		StartTime = GI->GetElapsedPlayTime();
 	}
 }
 

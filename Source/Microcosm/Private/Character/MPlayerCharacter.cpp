@@ -16,6 +16,10 @@ AMPlayerCharacter::AMPlayerCharacter()
 	BallMesh = CreateDefaultSubobject<UStaticMeshComponent>("Ball");
 	BallMesh->SetSimulatePhysics(true);
 	SetRootComponent(BallMesh);
+
+	PlayerMesh = CreateDefaultSubobject<USkeletalMeshComponent>("PlayerMesh");
+	PlayerMesh->SetupAttachment(BallMesh);
+	PlayerMesh->SetAbsolute(false, true, false);
 	
 	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>("Spring Arm");
 	SpringArmComponent->SetupAttachment(GetRootComponent());
@@ -53,13 +57,11 @@ UStaticMeshComponent* AMPlayerCharacter::GetBall() const
 bool AMPlayerCharacter::AddCardToHand(const FAbilityCard& AbilityCard)
 {
 	if(AbilityHand.Num() >= HandSize) return false;
-	if(AbilityHand.Contains(DefaultCard))
+
+	if (UMGameInstance* GI = Cast<UMGameInstance>(GetGameInstance()))
 	{
-		if(AbilityCard == DefaultCard) return false;
-		if(AbilityCard != DefaultCard) AbilityHand.RemoveNode(DefaultCard);
+		GI->PlaySFX(CardAdded);
 	}
-	
-	if(AbilityCard == DefaultCard && LastUsedCard == DefaultCard) return false;
 	
 	AbilityHand.AddTail(AbilityCard);
 	OnHandUpdated.Broadcast();
@@ -83,19 +85,18 @@ void AMPlayerCharacter::PlayActiveCard()
 
 	bool bWasSuccessful = false;
 	GetMAbilitySystemComponent()->AddAbility(CardAbility);
-	FGameplayAbilitySpecHandle AbilityHandle = UMAbilitySystemLibrary::TryActivateAbilityFromSpec(GetMAbilitySystemComponent(), CardAbility, bWasSuccessful);
+	const FGameplayAbilitySpecHandle AbilityHandle = UMAbilitySystemLibrary::TryActivateAbilityFromSpec(GetMAbilitySystemComponent(), CardAbility, bWasSuccessful);
 
 	if(bWasSuccessful)
 	{
-		OnHandUpdated.Broadcast();
 		AbilityHand.RemoveNode(Head);
 	}
 	else
 	{
-		OnHandUpdated.Broadcast();
-		GetMAbilitySystemComponent()->RemoveLooseGameplayTag(FMGameplayTags::Get().Abilities_ActiveCard_Active, 1);
 		GetMAbilitySystemComponent()->ClearAbility(AbilityHandle);
 	}
+
+	OnHandUpdated.Broadcast();
 }
 
 const TArray<FAbilityCard> AMPlayerCharacter::GetHand() const
@@ -106,6 +107,13 @@ const TArray<FAbilityCard> AMPlayerCharacter::GetHand() const
 		Result.Add(Node->GetValue());
 	}
 	return Result;
+}
+
+void AMPlayerCharacter::PlayWinMontage() const
+{
+	//PlayerMesh->SetAnimationMode(EAnimationMode::AnimationSingleNode);
+	//PlayerMesh->SetAnimation(MushroomWinAnimation);
+	//PlayerMesh->Play(true);
 }
 
 void AMPlayerCharacter::InitAbilityActorInfo()
@@ -157,9 +165,19 @@ void AMPlayerCharacter::FellOutOfWorld(const UDamageType& dmgType)
 	{
 		if(const AMGameMode* MGameMode = Cast<AMGameMode>(GameMode))
 		{
-			MGameMode->RestartLevel();	
+			MGameMode->RestartLevel();
 		}
 	}
+
+	if (UMGameInstance* GI = Cast<UMGameInstance>(GetGameInstance()))
+	{
+		GI->PlaySFX(MushroomDeath);
+
+		PlayerMesh->SetAnimationMode(EAnimationMode::AnimationSingleNode);
+		PlayerMesh->SetAnimation(MushroomDeathAnimation);
+		PlayerMesh->Play(false);
+	}
+	
 }
 
 void AMPlayerCharacter::ServerSideInit()
@@ -196,15 +214,16 @@ void AMPlayerCharacter::BeginPlay()
 		GM->OnLoopTickIncreased.AddDynamic(this, &AMPlayerCharacter::OnLoopTickIncreased);
 	}
 
-	DefaultCard = FAbilityCard(DefaultAbility, nullptr, DefaultAbilityColor);
-	LastUsedCard = FAbilityCard();
-	AddCardToHand(DefaultCard);
 	OnHandUpdated.Broadcast();
 	
 	if(UAbilitySystemComponent* ASC = GetAbilitySystemComponent())
 	{
 		ASC->RegisterGameplayTagEvent(FMGameplayTags::Get().Abilities_ActiveCard_Active, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &AMPlayerCharacter::OnActiveAbilityActiveTagChanged);
 	}
+
+	//PlayerMesh->SetAnimationMode(EAnimationMode::AnimationSingleNode);
+	//PlayerMesh->SetAnimation(MushroomIdleAnimation);
+	//PlayerMesh->Play(true);
 }
 
 void AMPlayerCharacter::UpdateFireballTag()
@@ -215,6 +234,9 @@ void AMPlayerCharacter::UpdateFireballTag()
 		if(ASC->HasMatchingGameplayTag(FMGameplayTags::Get().State_Movement_Fireball))
 		{
 			UAbilitySystemBlueprintLibrary::RemoveLooseGameplayTags(this, FMGameplayTags::Get().State_Movement_Fireball.GetSingleTagContainer(), true);
+			//PlayerMesh->SetRelativeRotation(FRotator::ZeroRotator);
+			//PlayerMesh->SetAbsolute(false, true, false);
+			//PlayerMesh->PlayAnimation(MushroomIdleAnimation, true);
 		}
 	}		
 }
@@ -257,7 +279,9 @@ void AMPlayerCharacter::Tick(float DeltaSeconds)
 			if(!ASC->HasMatchingGameplayTag(FMGameplayTags::Get().State_Movement_Fireball))
 			{
 				UAbilitySystemBlueprintLibrary::AddLooseGameplayTags(this, FMGameplayTags::Get().State_Movement_Fireball.GetSingleTagContainer(), true);
-				bFireballVelocityAchievedThisFrame = true;
+				//bFireballVelocityAchievedThisFrame = true;
+			//	PlayerMesh->SetAbsolute(false, false, false);
+			//	PlayerMesh->PlayAnimation(MushroomFireballAnimation, true);
 			}
 		}
 	}
@@ -276,7 +300,6 @@ void AMPlayerCharacter::OnActiveAbilityActiveTagChanged(const FGameplayTag Tag, 
 	if(Tag.MatchesTagExact(FMGameplayTags::Get().Abilities_ActiveCard_Active))
 	{
 		if(NewCount != 0) return;
-		if(AbilityHand.IsEmpty()) AddCardToHand(DefaultCard);
 		OnHandUpdated.Broadcast();
 	}
 }

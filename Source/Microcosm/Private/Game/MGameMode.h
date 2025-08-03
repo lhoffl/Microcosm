@@ -3,9 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "MGameInstance.h"
 #include "Actor/MGoalActor.h"
 #include "Character/MCharacter.h"
 #include "GameFramework/GameMode.h"
+#include "GameFramework/PlayerStart.h"
 #include "MGameMode.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLoopTickIncreased, int32, Tick);
@@ -25,6 +27,7 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnGoalReached OnGoalReached;
 	FTimerHandle LevelTimerHandle;
+	float StartTime;
 
 	float GetMaxPlayerMoveSpeed() const { return MaxPlayerMoveSpeed; }
 
@@ -67,4 +70,16 @@ private:
 	TArray<AMGoalActor*> GoalActors;
 	
 	float LevelTimer = 60.f;
+
+	UPROPERTY(EditDefaultsOnly)
+	USoundBase* LevelComplete;
+
+	UPROPERTY(EditDefaultsOnly)
+	USoundBase* LevelSkipComplete;
+
+	UPROPERTY(EditDefaultsOnly)
+	USoundBase* LevelCompleteJingle;
+
+	UPROPERTY()
+	UAudioComponent* AudioComponent;
 };

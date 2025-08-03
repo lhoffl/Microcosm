@@ -6,6 +6,7 @@
 #include "Abilities/GameplayAbility.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/RotatingMovementComponent.h"
+#include "Components/BillboardComponent.h"
 #include "MAbilityCardActor.generated.h"
 
 class USphereComponent;
@@ -20,16 +21,16 @@ struct FAbilityCard
 	UPROPERTY(BlueprintReadOnly)
 	FLinearColor Color = FLinearColor::Black;
 	
-	UPROPERTY()
-	UMaterialInterface* Material = nullptr;
-
+	UPROPERTY(BlueprintReadOnly)
+	UTexture2D* Texture2D = nullptr;
+	
 	UPROPERTY(BlueprintReadOnly)
 	bool bIsActiveCard = false;
 
-	explicit FAbilityCard(const TSubclassOf<UGameplayAbility>& InAbility, UMaterialInterface* InMaterial, const FLinearColor InColor)
+	explicit FAbilityCard(const TSubclassOf<UGameplayAbility>& InAbility, UTexture2D* InTexture2D, const FLinearColor InColor)
 	{
 		AbilityToGrant = InAbility;
-		Material = InMaterial;
+		Texture2D = InTexture2D;
 		Color = InColor;
 	}
 
@@ -45,7 +46,7 @@ UCLASS()
 class AMAbilityCardActor : public AActor
 {
 	GENERATED_BODY()
-	
+
 public:
 	AMAbilityCardActor();
 	virtual void Tick(float DeltaTime) override;
@@ -72,10 +73,16 @@ private:
 	USphereComponent* PickupSphere;
 
 	UPROPERTY(EditDefaultsOnly)
+	UTexture2D* Texture2D;
+
+	UPROPERTY(EditDefaultsOnly)
+	UBillboardComponent* CardBillboard;
+	
+	UPROPERTY(EditDefaultsOnly)
 	UStaticMeshComponent* CardMesh;
 
 	UPROPERTY(EditDefaultsOnly)
-	float TimeBeforeFalling = 10.f;
+	float TimeBeforeFalling = 2.f;
 
 	UPROPERTY(EditDefaultsOnly)
 	float DestroyDelayAfterGrounded = 10.f;
