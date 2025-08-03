@@ -102,6 +102,9 @@ private:
 	USoundBase* CardAdded;
 
 	UPROPERTY(EditDefaultsOnly)
+	USoundBase* BallLand;
+
+	UPROPERTY(EditDefaultsOnly)
 	UAnimationAsset* MushroomDeathAnimation;	
 
 	UPROPERTY(EditDefaultsOnly)

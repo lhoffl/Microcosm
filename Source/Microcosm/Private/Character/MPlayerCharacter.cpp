@@ -257,6 +257,10 @@ void AMPlayerCharacter::Tick(float DeltaSeconds)
 			if(!ASC->HasMatchingGameplayTag(FMGameplayTags::Get().State_Movement_Grounded))
 			{
 				UAbilitySystemBlueprintLibrary::AddLooseGameplayTags(this, FMGameplayTags::Get().State_Movement_Grounded.GetSingleTagContainer(), true);
+				if (UMGameInstance* GI = Cast<UMGameInstance>(GetGameInstance()))
+				{
+					GI->PlaySFX(BallLand);
+				}	
 			}
 		}
 	}
@@ -278,7 +282,9 @@ void AMPlayerCharacter::Tick(float DeltaSeconds)
 			if(!ASC->HasMatchingGameplayTag(FMGameplayTags::Get().State_Movement_Fireball))
 			{
 				UAbilitySystemBlueprintLibrary::AddLooseGameplayTags(this, FMGameplayTags::Get().State_Movement_Fireball.GetSingleTagContainer(), true);
-				//bFireballVelocityAchievedThisFrame = true;
+				bFireballVelocityAchievedThisFrame = true;
+
+				if(FireballGracePeriodTimer.IsValid()) FireballGracePeriodTimer.Invalidate();
 			//	PlayerMesh->SetAbsolute(false, false, false);
 			//	PlayerMesh->PlayAnimation(MushroomFireballAnimation, true);
 			}
