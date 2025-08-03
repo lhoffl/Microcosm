@@ -43,7 +43,6 @@ void UMGameInstance::Init()
 void UMGameInstance::Shutdown()
 {
 	Super::Shutdown();
-	// Optional: Log or save playtime here
 }
 
 float UMGameInstance::GetElapsedPlayTime() const

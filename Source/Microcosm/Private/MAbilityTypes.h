@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameplayEffectTypes.h"
 #include "MAbilityTypes.generated.h"
-
+#define ECC_PlayerOnlyOverlap ECC_GameTraceChannel1
 class UGameplayEffect;
 
 USTRUCT(BlueprintType)

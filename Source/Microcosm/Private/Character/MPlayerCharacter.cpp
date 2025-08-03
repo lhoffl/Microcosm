@@ -150,7 +150,6 @@ void AMPlayerCharacter::PossessedBy(AController* NewController)
 void AMPlayerCharacter::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
-	ClientSideInit();
 	
 	if(const IGenericTeamAgentInterface* PlayerStateTeamAgent = Cast<IGenericTeamAgentInterface>(GetPlayerState()))
 	{

@@ -36,25 +36,15 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 	void EliminationSecured();
-	virtual void Die();
 	virtual void InitAbilityActorInfo();
 	void ApplyEffectToSelf(const TSubclassOf<UGameplayEffect>& GameplayEffectClass, float Level) const;
 	virtual void InitializeDefaultAttributes() const;
-	virtual void HandleDeath();
-	virtual void SetupHitboxes();
 	void AddCharacterAbilities() const;
 	virtual void PossessedBy(AController* NewController) override;
 
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	
 	void BindCallbacksToDependencies();
 	
-	UFUNCTION(NetMulticast, Reliable)
-	void MulticastHandleDeath();
-
 	FCollisionQueryParams GetIgnoreCharacterParams() const;
-
-	bool bIsDead;
 
 	virtual FGenericTeamId GetGenericTeamId() const override;
 	virtual void SetGenericTeamId(const FGenericTeamId& InTeamID) override;
@@ -69,18 +59,12 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Ability and Attribute Defaults|Class")
 	ECharacterClass CharacterClass;	
 
-	//virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode) override;
-
 	UPROPERTY(VisibleDefaultsOnly, Category = "UI|Overhead")
 	UWidgetComponent* OverheadWidget;
 
 	bool IsLocallyControlledByPlayer() const;
 	
-	void ConfigureOverheadStatusWidget();
-	virtual void OnFullHealthTagChanged(FGameplayTag GameplayTag, signed int NewCount) const;
-
 	virtual void ServerSideInit();
-	virtual void ClientSideInit();
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI|Overhead")
 	float OverheadStatVisibilityTimerPeriod = 1.f;
@@ -92,33 +76,15 @@ protected:
 	FTimerHandle FullHealthOverheadDelayTimerHandle;
 	FDelegateHandle FullHealthTagChangedDelegate;
 
-	void UpdateOverheadStatVisibility() const;
-
 	virtual void Destroyed() override;
 	
-	UPROPERTY()
-	UOverheadStatusGauge* OverheadStatusGauge;
-
-	void ScaleOverheadStatusGauge() const;
-
-	UPROPERTY(EditDefaultsOnly, Category = "UI|Overhead")
-	float MinOverheadScale = 300.f;
-
-	UPROPERTY(EditDefaultsOnly, Category = "UI|Overhead")
-	float MaxOverheadScale = 2000.f;
-
 	UPROPERTY()
 	class UAIPerceptionStimuliSourceComponent* PerceptionStimuliSourceComponent;
 
 	void SetAIPerceptionStimuliSourceEnabled(bool bIsEnabled) const;
 
-	bool bShowName;
-	bool bAlwaysShowHealth = true;
 	bool bCallbacksBound;
 
-	UFUNCTION()
-	virtual void OnRep_TeamID();
-
-	UPROPERTY(ReplicatedUsing = OnRep_TeamID)
+	UPROPERTY()
 	FGenericTeamId TeamID;
 };

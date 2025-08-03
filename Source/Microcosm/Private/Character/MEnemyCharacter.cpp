@@ -39,9 +39,6 @@ AMEnemyCharacter::AMEnemyCharacter()
 	AttributeSet = CreateDefaultSubobject<UMAttributeSet>("AttributeSet");
 
 	PhysicsMesh = CreateDefaultSubobject<USkeletalMeshComponent>("Physics");
-	//PhysicsMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	//PhysicsMesh->SetCollisionObjectType(ECC_PhysicsBody);
-	//PhysicsMesh->SetSimulatePhysics(true);
 	PhysicsMesh->SetVisibility(false);
 	SetRootComponent(PhysicsMesh);
 	
@@ -49,16 +46,16 @@ AMEnemyCharacter::AMEnemyCharacter()
 	EnemyMesh->SetEnableGravity(false);
 	EnemyMesh->SetSimulatePhysics(false);
 	EnemyMesh->SetupAttachment(GetRootComponent());
+	EnemyMesh->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	EnemyMesh->SetCollisionResponseToChannel(ECC_PlayerOnlyOverlap, ECR_Overlap);
 	
 	HitBox =CreateDefaultSubobject<USphereComponent>("Hitbox");
 	HitBox->SetupAttachment(GetRootComponent());
 	HitBox->OnComponentBeginOverlap.AddDynamic(this, &AMEnemyCharacter::OnHitBoxOverlapped);
 	HitBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	HitBox->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 	HitBox->SetEnableGravity(false);
 	HitBox->SetSimulatePhysics(false);
-	
-	bShowName = false;
-	bAlwaysShowHealth = false;
 }
 
 FGenericTeamId AMEnemyCharacter::GetGenericTeamId() const
@@ -87,7 +84,6 @@ void AMEnemyCharacter::PossessedBy(AController* NewController)
 void AMEnemyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	ClientSideInit();
 
 	ToggleActive(true);
 	EnemyMesh->SetAnimationMode(EAnimationMode::AnimationSingleNode);
@@ -115,6 +111,18 @@ void AMEnemyCharacter::ToggleActive(const bool bActive)
 	bIsActive = bActive;
 	SetActorHiddenInGame(!bActive);
 	SetActorEnableCollision(bActive);
+	HitBox->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+
+	if(bActive)
+	{
+		EnemyMesh->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+		EnemyMesh->SetCollisionResponseToChannel(ECC_PlayerOnlyOverlap, ECR_Overlap);	
+	}
+	else
+	{
+		EnemyMesh->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+		EnemyMesh->SetCollisionResponseToChannel(ECC_PlayerOnlyOverlap, ECR_Ignore);		
+	}
 }
 
 

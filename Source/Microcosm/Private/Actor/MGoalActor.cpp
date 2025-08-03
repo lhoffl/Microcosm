@@ -10,12 +10,14 @@ AMGoalActor::AMGoalActor()
 	PrimaryActorTick.bCanEverTick = true;
 
 	GoalMesh = CreateDefaultSubobject<UStaticMeshComponent>("GoalMesh");
+	GoalMesh->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 	SetRootComponent(GoalMesh);
 	
 	GoalBox = CreateDefaultSubobject<UBoxComponent>("GoalBox");
 	GoalBox->SetupAttachment(GetRootComponent());
 	GoalBox->SetGenerateOverlapEvents(true);
 	GoalBox->OnComponentBeginOverlap.AddDynamic(this, &AMGoalActor::OnGoalOverlap);
+	GoalBox->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 
 	PointLightComponent = CreateDefaultSubobject<UPointLightComponent>("PointLight");
 	PointLightComponent->SetupAttachment(GetRootComponent());	

@@ -21,6 +21,7 @@ AMAbilityCardActor::AMAbilityCardActor()
 	CardMesh = CreateDefaultSubobject<UStaticMeshComponent>("CardMesh");
 	CardMesh->SetSimulatePhysics(false);
 	CardMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	CardMesh->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 	CardMesh->SetVisibility(false);
 	SetRootComponent(CardMesh);
 
@@ -28,6 +29,8 @@ AMAbilityCardActor::AMAbilityCardActor()
 	CardBillboard->SetupAttachment(GetRootComponent());
 	CardBillboard->SetHiddenInGame(false);
 	CardBillboard->Sprite = Texture2D;
+	CardBillboard->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+
 	
 	RotatingMovementComponent = CreateDefaultSubobject<URotatingMovementComponent>("RotatingMovement");
 	RotatingMovementComponent->RotationRate = RotationRate;
@@ -36,6 +39,7 @@ AMAbilityCardActor::AMAbilityCardActor()
 	PickupSphere->SetupAttachment(GetRootComponent());
 	PickupSphere->SetGenerateOverlapEvents(true);
 	PickupSphere->OnComponentBeginOverlap.AddDynamic(this, &AMAbilityCardActor::OnPickupOverlap);
+	PickupSphere->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 }
 
 void AMAbilityCardActor::BeginPlay()
